@@ -1,4 +1,3 @@
-from sequence_hopfield_utils import ContinuousHopfield
 import string
 import numpy as np
 
@@ -21,7 +20,13 @@ def convert_string_pattern(string_pattern, decay_rate=0.9):
         ind = all_chars.index(char)
         pattern_vec[ind] += 1
         pattern_vecs.append(normalize(pattern_vec))
-    next_pattern_vecs = pattern_vecs[1:] + [[1]*len(all_chars)]
     pattern_vecs = [np.array(p).reshape(-1, 1) for p in pattern_vecs]
-    next_pattern_vecs = [np.array(p).reshape(-1, 1) for p in next_pattern_vecs]
+    return np.array(pattern_vecs)
+
+
+def get_patterns(string_pattern, decay_rate=0.9):
+    pattern_vecs = convert_string_pattern(string_pattern, decay_rate=decay_rate)
+    next_pattern_vecs = pattern_vecs[1:]
+    pattern_vecs = pattern_vecs[:-1]
+
     return np.array(pattern_vecs), np.array(next_pattern_vecs)

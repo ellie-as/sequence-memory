@@ -30,15 +30,14 @@ def get_graph(nodes = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]):
 
     return G
 
-def get_random_walks(G):
+def get_random_walks(G, n_walks=1):
     csr_G = cg.csrgraph(G, threads=12)
     node_names = csr_G.names
     walks = csr_G.random_walks(walklen=50, # length of the walks
-                    epochs=10,
-                    start_nodes=None,
+                    epochs=1,
+                    start_nodes=list(range(0, n_walks)),
                     return_weight=1.,
                     neighbor_weight=1.)
-
     walks = np.vectorize(lambda x: node_names[x])(walks)
     return walks
 
@@ -52,17 +51,15 @@ def walk_to_string(walk, G):
     walk_string += walk[-1]
     return walk_string
 
-def get_walks_as_strings():
-    entities_for_graphs =[[random.choice(string.ascii_letters[0:26]) for i in range(9)] for i in range(1000)]
-    entities_for_graphs = [entities for entities in entities_for_graphs if len(list(set(entities)))== 9]
+def get_walks_as_strings(n_graphs=1000, n_walks=10):
+    entities_for_graphs =[random.sample(string.ascii_letters[0:26], 9) for i in range(n_graphs)]
 
     walks_as_strings = []
     for nodes in entities_for_graphs:
         G = get_graph(nodes=nodes)
-        walks = get_random_walks(G)
+        walks = get_random_walks(G, n_walks=n_walks)
         walks_as_strings.extend([walk_to_string(walk, G) for walk in walks])
     return walks_as_strings
-import matplotlib.pyplot as plt
 
 def plot_path(input_string):
     directions = {'N': (0, 1), 'E': (1, 0), 'S': (0, -1), 'W': (-1, 0)}

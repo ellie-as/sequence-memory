@@ -16,7 +16,7 @@ transformers_logger.setLevel(logging.WARNING)
 
 class GPT:
 
-    def __init__(self, base_model=None, base_model_name='gpt2', vocab_size=500):
+    def __init__(self, base_model=None, base_model_name='gpt2', vocab_size=100):
         self.base_model = base_model
         self.base_model_name = base_model_name
         self.vocab_size = vocab_size
@@ -24,43 +24,58 @@ class GPT:
         if self.base_model is not None:
             self.tokenizer = GPT2Tokenizer.from_pretrained(base_model)
             self.model = GPT2LMHeadModel.from_pretrained(base_model)
+            self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def train(self, segmented_sequence_list, best_model_dir, eps=1, lr=1e-5):
-        text_file = open("train.txt", "w")
-        shuffle(segmented_sequence_list)
-        text_file.write('\n'.join(segmented_sequence_list))
-        text_file.close()
+    def train(self, segmented_sequence_list, best_model_dir, eps=10, lr=1e-5, batch_size=1, train_file=None, test_file=None, sliding_window=False, stride=0.8):
+        if train_file is None:
+            shuffle(segmented_sequence_list)
+            text_file = open("train.txt", "w")
+            subset = segmented_sequence_list[0:int(0.9 * len(segmented_sequence_list))]
+            text_file.write('\n'.join(subset))
+            text_file.close()
+            train_file = "train.txt"
+        if test_file is None:
+            text_file = open("test.txt", "w")
+            subset = segmented_sequence_list[int(0.9 * len(segmented_sequence_list)):]
+            text_file.write('\n'.join(subset))
+            text_file.close()
+            test_file = "test.txt"
 
         model_args = LanguageModelingArgs()
         model_args.reprocess_input_data = True
         model_args.overwrite_output_dir = True
         model_args.dataset_type = "simple"
         model_args.save_model_every_epoch = False
-        model_args.evaluate_during_training = False
+        model_args.evaluate_during_training = True
+        model_args.evaluate_during_training_verbose = True
         model_args.mlm = False
         model_args.use_early_stopping = True
+        model_args.early_stopping_consider_epochs = True
+        model_args.early_stopping_metric = "eval_loss"
         model_args.manual_seed = 123
+        model_args.save_model_every_epoch = True
         model_args.learning_rate = lr
         model_args.num_train_epochs = eps
-        model_args.train_batch_size = 2
-        model_args.best_model_dir = best_model_dir
+        model_args.best_model_dir = f"{best_model_dir}/best"
+        model_args.output_dir = best_model_dir
+        model_args.train_batch_size = 1
+        model_args.sliding_window = sliding_window
+        model_args.stride = stride
         # only set vocab size if training from scratch:
         if self.base_model is None:
             model_args.vocab_size = self.vocab_size
 
-        train_file = "train.txt"
         model = LanguageModelingModel(self.base_model_name,
                                       self.base_model,
                                       # provide file to train tokenizer - not used unless self.base_model is None:
                                       train_files='train.txt',
                                       args=model_args,
-                                      use_cuda=False)
-        model.device = 'mps'
+                                      use_cuda=True)
+        # model.device = 'mps'
         # Train the model
-        model.train_model(train_file)
+        model.train_model(train_file, eval_file=test_file)
         # Load trained model with transformers library
-        self.tokenizer = GPT2Tokenizer.from_pretrained("outputs")
-        self.model = GPT2LMHeadModel.from_pretrained("outputs")
+        return model
 
     def segment(self, sequence_to_segment, rolling_mean=True, window_size=3, threshold=10,
                 surprise_offset=5, plot=True, yrange=None):
@@ -130,8 +145,8 @@ class GPT:
 
         return segments
 
-    def continue_input(self, input_sequence, max_length=200, num_return_sequences=1, no_repeat_ngram_size=2,
-                       do_sample=True, temperature=0.7):
+    def continue_input(self, input_sequence, max_length=200, num_return_sequences=1, no_repeat_ngram_size=0,
+                       do_sample=False, temperature=0.7, num_beams=1):
         input_ids = self.tokenizer.encode(input_sequence, return_tensors='pt')
 
         # Generate text
@@ -139,13 +154,13 @@ class GPT:
             input_ids,
             max_length=max_length,
             num_return_sequences=num_return_sequences,
+            num_beams=num_beams,
             no_repeat_ngram_size=no_repeat_ngram_size,
             do_sample=do_sample,
             temperature=temperature,
         )
 
         # Decode the output
-        for i in range(1):  # because num_return_sequences=1
-            sequence = output[i].tolist()
-            text = self.tokenizer.decode(sequence)
-            print(text)
+        sequence = output[0].tolist()
+        text = self.tokenizer.decode(sequence)
+        return text

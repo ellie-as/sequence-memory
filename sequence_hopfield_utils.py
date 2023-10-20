@@ -52,7 +52,13 @@ class ContinuousHopfield:
 
             # the limit of softmax for large beta is just setting the largest element to 1, others to 0
             if self.beta > LARGE_THRESHOLD:
-                pat_new = self.next_patterns @ self.limit_softmax(self.patterns.T @ pat_old)
+                # in the limit of high beta we want:
+                # pat_new = self.next_patterns @ self.limit_softmax(self.patterns.T @ pat_old)
+                # softmax in the limit of high beta produces a one-hot vector, so:
+                one_hot_vector = self.limit_softmax(self.patterns.T @ pat_old)
+                index_of_one = np.argmax(one_hot_vector)
+                pat_new = self.next_patterns[:, index_of_one].reshape(-1, 1)
+
             else:
                 pat_new = self.next_patterns @ self.softmax(self.beta * self.patterns.T @ pat_old)
 

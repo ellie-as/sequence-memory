@@ -1,7 +1,7 @@
 import random
 import string
 import numpy as np
-from hpc_utils import convert_string_pattern, normalize
+from hpc_utils import get_patterns, normalize, convert_string_pattern
 from sequence_hopfield_utils import ContinuousHopfield
 
 all_chars = string.ascii_letters + string.digits + string.punctuation + ' []'
@@ -18,7 +18,7 @@ class HPC:
         patterns_list = []
         next_patterns_list = []
         for seq in sequences_list:
-            pattern_vecs, next_pattern_vecs = convert_string_pattern(seq, decay_rate=self.decay_rate)
+            pattern_vecs, next_pattern_vecs = get_patterns(seq, decay_rate=self.decay_rate)
             patterns_list.append(pattern_vecs)
             next_patterns_list.append(next_pattern_vecs)
 
@@ -29,12 +29,12 @@ class HPC:
         return self.hpc
 
     def recall(self, input_str, output_len=1000):
-        test_pat, test_next_pat = convert_string_pattern(input_str)
+        test_pat = convert_string_pattern(input_str)
         pat = test_pat[-1]
         all_chars_str = ""
         for iter in range(output_len):
             pat = self.hpc.retrieve(pat, max_iter=1)
-            flattened = normalize([np.round(p[0], 100) for p in pat])
+            flattened = normalize([p[0] for p in pat])
             pat = np.array(flattened).reshape(-1, 1)
             char = all_chars[np.argmax(flattened)]
             # ']' is the end of sequence token
