@@ -586,6 +586,7 @@ def main():
             return metric.compute(predictions=preds, references=labels)
 
     # Initialize our Trainer
+    training_args.use_mps_device = True
     trainer = Trainer(
         model=model,
         args=training_args,
