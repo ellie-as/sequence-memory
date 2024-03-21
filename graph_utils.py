@@ -20,13 +20,13 @@ def get_graph(nodes = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]):
         G.add_node(n)
 
     for tple in east_pairs:
-        G.add_edge(tple[0], tple[1], direction='E')
+        G.add_edge(tple[0], tple[1], direction='EAST')
     for tple in north_pairs:
-        G.add_edge(tple[0], tple[1], direction='N')
+        G.add_edge(tple[0], tple[1], direction='NORTH')
     for tple in west_pairs:
-        G.add_edge(tple[0], tple[1], direction='W')
+        G.add_edge(tple[0], tple[1], direction='WEST')
     for tple in south_pairs:
-        G.add_edge(tple[0], tple[1], direction='S')
+        G.add_edge(tple[0], tple[1], direction='SOUTH')
 
     return G
 
@@ -34,12 +34,37 @@ def get_random_walks(G, n_walks=1):
     csr_G = cg.csrgraph(G, threads=12)
     node_names = csr_G.names
     walks = csr_G.random_walks(walklen=50, # length of the walks
-                    epochs=1,
-                    start_nodes=list(range(0, n_walks)),
+                    epochs=n_walks,
+                    # start_nodes=list(range(0, 9)),
                     return_weight=1.,
                     neighbor_weight=1.)
     walks = np.vectorize(lambda x: node_names[x])(walks)
     return walks
+
+def generate_n_random_walks(G, n_walks, walk_length):
+    walks = []
+    nodes = list(G.nodes)
+    
+    for _ in range(n_walks):
+        walk = []
+        # Start from a random node
+        current_node = random.choice(nodes)
+        walk.append(current_node)
+        
+        while len(walk) < walk_length:
+            neighbors = list(G.successors(current_node))
+            if not neighbors:
+                break  # If the current node has no out-edges, end the walk
+            next_node = random.choice(neighbors)
+            walk.append(next_node)
+            current_node = next_node
+        
+        # Convert walk to a string describing the path
+        walk_str = walk_to_string(walk, G)
+        walks.append(walk_str)
+        
+    return walks
+
 
 def walk_to_string(walk, G):
     walk_string = ""
@@ -51,18 +76,23 @@ def walk_to_string(walk, G):
     walk_string += walk[-1]
     return walk_string
 
-def get_walks_as_strings(n_graphs=1000, n_walks=10):
-    entities_for_graphs =[random.sample(string.ascii_letters[0:26], 9) for i in range(n_graphs)]
+def generate_name() -> str:
+    return ''.join(random.choices(string.ascii_lowercase, k=2))
 
+def get_walks_as_strings(n_graphs=1000, n_walks=10, walk_length=50):
+    entities_for_graphs =[[generate_name() for j in range(9)] for i in range(n_graphs)]
+    
+    all_graphs = []
     walks_as_strings = []
     for nodes in entities_for_graphs:
         G = get_graph(nodes=nodes)
-        walks = get_random_walks(G, n_walks=n_walks)
-        walks_as_strings.extend([walk_to_string(walk, G) for walk in walks])
-    return walks_as_strings
+        walks = generate_n_random_walks(G, n_walks, walk_length)
+        walks_as_strings.extend(walks)
+        all_graphs.append(G)
+    return walks_as_strings, all_graphs
 
 def plot_path(input_string):
-    directions = {'N': (0, 1), 'E': (1, 0), 'S': (0, -1), 'W': (-1, 0)}
+    directions = {'NORTH': (0, 1), 'EAST': (1, 0), 'SOUTH': (0, -1), 'WEST': (-1, 0)}
     steps = input_string.split(' ')
 
     # Initialize position and label

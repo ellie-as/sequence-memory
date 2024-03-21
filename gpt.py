@@ -26,7 +26,7 @@ class GPT:
             self.model = GPT2LMHeadModel.from_pretrained(base_model)
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def train(self, segmented_sequence_list, best_model_dir, eps=10, lr=1e-5, batch_size=1, train_file=None, test_file=None, sliding_window=False, stride=0.8):
+    def train(self, segmented_sequence_list, best_model_dir, eps=10, lr=1e-5, batch_size=1, train_file=None, test_file=None, sliding_window=False, stride=0.8, seed=123):
         if train_file is None:
             shuffle(segmented_sequence_list)
             text_file = open("train.txt", "w")
@@ -52,7 +52,7 @@ class GPT:
         model_args.use_early_stopping = True
         model_args.early_stopping_consider_epochs = True
         model_args.early_stopping_metric = "eval_loss"
-        model_args.manual_seed = 123
+        model_args.manual_seed = seed
         model_args.save_model_every_epoch = True
         model_args.learning_rate = lr
         model_args.num_train_epochs = eps
@@ -70,8 +70,8 @@ class GPT:
                                       # provide file to train tokenizer - not used unless self.base_model is None:
                                       train_files='train.txt',
                                       args=model_args,
-                                      use_cuda=True)
-        # model.device = 'mps'
+                                      use_cuda=False)
+        model.device = 'mps'
         # Train the model
         model.train_model(train_file, eval_file=test_file)
         # Load trained model with transformers library
