@@ -408,7 +408,7 @@ def main():
     elif model_args.model_name_or_path:
         config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
     else:
-        # config = CONFIG_MAPPING[model_args.model_type]()
+        #config = CONFIG_MAPPING[model_args.model_type]()
         config = GPT2Config(
           vocab_size=50257,  # Standard GPT-2 vocab size
           n_positions=1024,
