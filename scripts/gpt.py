@@ -45,7 +45,7 @@ class GPT:
         model_args.reprocess_input_data = True
         model_args.overwrite_output_dir = True
         model_args.dataset_type = "simple"
-        model_args.save_model_every_epoch = False
+        model_args.save_model_every_epoch = True
         model_args.evaluate_during_training = True
         model_args.evaluate_during_training_verbose = True
         model_args.mlm = False
