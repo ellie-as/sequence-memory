@@ -45,7 +45,7 @@ class GPT:
         model_args.reprocess_input_data = True
         model_args.overwrite_output_dir = True
         model_args.dataset_type = "simple"
-        model_args.save_model_every_epoch = False
+        model_args.save_model_every_epoch = True
         model_args.evaluate_during_training = True
         model_args.evaluate_during_training_verbose = True
         model_args.mlm = False
@@ -61,6 +61,7 @@ class GPT:
         model_args.train_batch_size = 1
         model_args.sliding_window = sliding_window
         model_args.stride = stride
+        model_args.evaluate_during_training_steps = 200
         # only set vocab size if training from scratch:
         if self.base_model is None:
             model_args.vocab_size = self.vocab_size

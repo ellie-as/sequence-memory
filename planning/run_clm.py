@@ -40,7 +40,6 @@ from transformers import (
     CONFIG_MAPPING,
     MODEL_FOR_CAUSAL_LM_MAPPING,
     AutoConfig,
-    GPT2Config,
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
@@ -408,16 +407,7 @@ def main():
     elif model_args.model_name_or_path:
         config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
     else:
-        #config = CONFIG_MAPPING[model_args.model_type]()
-        config = GPT2Config(
-          vocab_size=50257,  # Standard GPT-2 vocab size
-          n_positions=1024,
-          n_ctx=1024,
-          n_embd=1024,  # Medium has 1024-dimensional embeddings
-          n_layer=24,  # Medium has 24 layers
-          n_head=16,  # Medium has 16 attention heads
-          )
-
+        config = CONFIG_MAPPING[model_args.model_type]()
         logger.warning("You are instantiating a new config instance from scratch.")
         if model_args.config_overrides is not None:
             logger.info(f"Overriding config: {model_args.config_overrides}")
@@ -596,7 +586,7 @@ def main():
             return metric.compute(predictions=preds, references=labels)
 
     # Initialize our Trainer
-    #training_args.use_mps_device = True
+    training_args.use_mps_device = True
     trainer = Trainer(
         model=model,
         args=training_args,
