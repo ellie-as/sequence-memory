@@ -61,6 +61,7 @@ class GPT:
         model_args.train_batch_size = 1
         model_args.sliding_window = sliding_window
         model_args.stride = stride
+        model_args.evaluate_during_training_steps = 200
         # only set vocab size if training from scratch:
         if self.base_model is None:
             model_args.vocab_size = self.vocab_size
