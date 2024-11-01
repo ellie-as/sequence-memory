@@ -1,25 +1,6 @@
-#!/usr/bin/env python
-# coding=utf-8
-# Copyright 2020 The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """
-Fine-tuning the library models for causal language modeling (GPT, GPT-2, CTRL, ...) on a text file or a dataset.
-
-Here is the full list of checkpoints on the hub that can be fine-tuned by this script:
-https://huggingface.co/models?filter=text-generation
+This is an adapted version of the HuggingFace Transformers example training script.
 """
-# You can also adapt this script on your own causal language modeling task. Pointers for this are left as comments.
 
 import logging
 import math
@@ -40,6 +21,7 @@ from transformers import (
     CONFIG_MAPPING,
     MODEL_FOR_CAUSAL_LM_MAPPING,
     AutoConfig,
+    GPT2Config,
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
@@ -407,7 +389,15 @@ def main():
     elif model_args.model_name_or_path:
         config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
     else:
-        config = CONFIG_MAPPING[model_args.model_type]()
+        config = GPT2Config(
+            vocab_size=50257,
+            n_positions=1024,
+            n_ctx=1024,
+            n_embd=1024,  
+            n_layer=24,
+            n_head=16,
+        )
+
         logger.warning("You are instantiating a new config instance from scratch.")
         if model_args.config_overrides is not None:
             logger.info(f"Overriding config: {model_args.config_overrides}")
@@ -586,7 +576,6 @@ def main():
             return metric.compute(predictions=preds, references=labels)
 
     # Initialize our Trainer
-    training_args.use_mps_device = True
     trainer = Trainer(
         model=model,
         args=training_args,
