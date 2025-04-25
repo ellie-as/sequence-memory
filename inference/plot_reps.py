@@ -246,8 +246,9 @@ def plot_all_runs_in_one_pca(all_points, all_edges, model_name, reducer="pca"):
         color = cmap(pos_index % 10)
         plt.plot([x1, x2], [y1, y2], '--', color=color, alpha=0.0)
 
-    plt.grid(True)
-    #plt.legend()
+    #plt.grid(True)
+    if model_name == 'gpt2-medium':
+        plt.legend()
     plt.savefig(f'{model_name}_combined_{reducer}.png', dpi=200, bbox_inches='tight')
     logging.info(f"Saved combined plot as {model_name}_combined_{reducer}.png")
 
@@ -262,7 +263,7 @@ def boxplot_of_dist_map(global_dist_map, model_name):
     plt.xticks(range(1, len(sorted_keys)+1), sorted_keys)
     plt.xlabel("Distance in grid")
     plt.ylabel("Distance between rep.s")
-    plt.grid(True, axis='y', alpha=0.5)
+    #plt.grid(True, axis='y', alpha=0.5)
     plt.savefig(f'{model_name}_boxplot.png', dpi=200, bbox_inches='tight')
     logging.info(f"Saved boxplot as {model_name}_boxplot.png")
 
@@ -406,7 +407,7 @@ def correlation_vs_context_length(
         plt.plot(context_lengths, rolled, 'o-', label=f"Rolling mean (window={rolling_window})")
     plt.xlabel("Context length")
     plt.ylabel("Pearson correlation")
-    plt.grid(True)
+    #plt.grid(True)
     plt.legend()
     plt.savefig(f'{model_name}_correlation_vs_context_length.png', dpi=200)
     logging.info(f"Saved correlation plot as {model_name}_correlation_vs_context_length.png")
@@ -442,7 +443,7 @@ def plot_embeddings_with_graph_edges(mean_repr, G, model_name="gpt2", reducer="u
             x2, y2 = X_2d[j, 0], X_2d[j, 1]
             plt.plot([x1, x2], [y1, y2], 'k--', alpha=0.3)
     plt.title(title + f" ({reducer.upper()})")
-    plt.grid(True)
+    #plt.grid(True)
     timestamp_str = str(int(time.time()))
     plt.savefig(f'{model_name}_single_{reducer}_{timestamp_str}.png', dpi=200, bbox_inches='tight')
     logging.info(f"Saved embeddings plot as {model_name}_single_{reducer}_{timestamp_str}.png")
@@ -513,16 +514,13 @@ def correlation_vs_layer(
     plt.xlabel("Layer index")
     plt.ylabel("Pearson correlation")
     plt.title(f"Correlation vs layer for {model_name}")
-    plt.grid(True)
+    #plt.grid(True)
     plt.legend()
     plt.savefig(f'{model_name}_correlation_vs_layer.png', dpi=200, bbox_inches='tight')
     logging.info(f"Saved correlation vs layer plot as {model_name}_correlation_vs_layer.png")
     
     return avg_correlations
 
-##############################################################################
-#                      NEW MULTI-MODEL PLOTTING FUNCTIONS                    #
-##############################################################################
 
 def correlation_vs_context_length_multi(
     models,
@@ -577,7 +575,7 @@ def correlation_vs_context_length_multi(
     plt.xlabel("Context length")
     plt.ylabel("Pearson correlation")
     plt.title("Correlation vs context length")
-    plt.grid(True)
+    #plt.grid(True)
     plt.legend()
     plt.savefig(f'comparison_correlation_vs_context_length.png', dpi=200, bbox_inches='tight')
     logging.info("Saved multi-model correlation vs context length plot as comparison_correlation_vs_context_length.png")
@@ -631,19 +629,14 @@ def correlation_vs_layer_multi(
     plt.xlabel("Layer index")
     plt.ylabel("Pearson correlation")
     plt.title("Correlation vs layer")
-    plt.grid(True)
+    #plt.grid(True)
     plt.legend()
     plt.savefig(f'comparison_correlation_vs_layer.png', dpi=200, bbox_inches='tight')
     logging.info("Saved multi-model correlation vs layer plot as comparison_correlation_vs_layer.png")
 
 
-##############################################################################
-#                        EXAMPLE MAIN CODE RUNS                               #
-##############################################################################
 if __name__ == "__main__":
 
-    # --- Original usage (single model calls) ---
-    # (These calls produce separate plots per model.)
     model_to_test = "outputs_graph"
     
     multi_graph_allinone(
@@ -678,7 +671,6 @@ if __name__ == "__main__":
             reducer="pca"
         )
 
-    # --- NEW multi-model usage (plots for multiple models together on one chart) ---
     models_to_compare = ["gpt2-medium", model_to_test]
 
     # 1) correlation vs context length, single chart
@@ -693,7 +685,7 @@ if __name__ == "__main__":
     # 2) correlation vs layer, single chart
     correlation_vs_layer_multi(
         models=models_to_compare,
-        layer_indices=list(range(24)),  # or range(24) for gpt2-medium
+        layer_indices=list(range(24)),  
         n_runs=10,
         walk_length=50
     )
